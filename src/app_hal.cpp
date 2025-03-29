@@ -839,7 +839,7 @@ void handleButtonPress() {
       // Long press
       toneOut(TONE_FS * 2, 500);
       digitalWrite(SYS_EN_GPIO, LOW);
-      digitalWrite(SYS_EN_GPIO, LOW); // Power off the system
+     esp_deep_sleep_start();
       
     } else if (millis() - lastPressTime < DOUBLE_PRESS_GAP) {
       // Double press
@@ -862,7 +862,7 @@ void handleButtonPress() {
       longPressHandled = true;
       toneOut(TONE_FS * 2, 500);
       digitalWrite(SYS_EN_GPIO, LOW); // Power off the system
-      ESP.restart();
+     esp_deep_sleep_start(); // Sleep the system
     }
   }
 }

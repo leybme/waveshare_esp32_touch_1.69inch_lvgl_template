@@ -50,7 +50,7 @@ void ticker_callback()
     // This function will be called every second
     static long count = millis();
     count = millis();
-    Serial1.println("Ticker called! " + String(count));
+    Serial.println("Ticker called! " + String(count));
     lv_label_set_text(label, ("millis:" + String(count)).c_str()); // Update the label text
 }
 void setup()
