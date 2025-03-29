@@ -64,21 +64,33 @@ Example pitch constants (defined in `tone.h`):
 
 ### Periodic Ticker Callback
 
-Use `Ticker` to schedule functions at a regular interval:
+Use FreeRTOS tasks for periodic updates:
 
 ```cpp
-Ticker ticker;
+TaskHandle_t otherTaskHandle = NULL;
 
-void ticker_callback()
+void otherTask(void *parameter)
 {
-    static long count = millis();
-    count = millis();
-    Serial1.println("Ticker called! " + String(count));
-    lv_label_set_text(label, ("millis:" + String(count)).c_str()); // Update the label text
+    static long counter = 0;
+    while (1)
+    {
+        counter = millis() / 1000;
+        String str = "Counter" + String(counter);
+        lv_label_set_text(label, str.c_str()); // Update the label text
+        vTaskDelay(1000 / portTICK_PERIOD_MS); // Delay for 1 second
+    }
 }
 
-// Call ticker_callback every 1 second
-ticker.attach(1, ticker_callback);
+xTaskCreatePinnedToCore(
+    otherTask,        // Task function
+    "Other Task",     // Task name
+    2048,             // Stack size (words)
+    NULL,             // Parameters
+    1,                // Priority (1 is usually enough)
+    &otherTaskHandle, // Task handle
+    0                 // Core 0 or 1 (0 is good for simple tasks)
+);
+
 ```
 
 ---

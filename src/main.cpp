@@ -24,16 +24,25 @@
   SOFTWARE.
 
 */
+#include "Arduino.h"
 #include "app_hal.h"
 #include "common/api.h"
 #include "tone.h"
 #include "lvgl.h"
-#include "Ticker.h"
-Ticker ticker;
 
-// esp32 hardware
-#include <Arduino.h>
+TaskHandle_t otherTaskHandle = NULL;
 lv_obj_t *label;
+void otherTask(void *parameter)
+{
+    static long counter = 0;
+    while (1)
+    {
+        counter = millis() / 1000;
+        String str = "Counter" + String(counter);
+        lv_label_set_text(label, str.c_str()); // Update the label text
+        vTaskDelay(1000 / portTICK_PERIOD_MS); // Delay for 1 second
+    }
+}
 
 void onShortPress()
 {
@@ -45,29 +54,28 @@ void onDoublePress()
     Serial.println("Double press detected!");
 }
 
-void ticker_callback()
-{
-    // This function will be called every second
-    static long count = millis();
-    count = millis();
-    Serial.println("Ticker called! " + String(count));
-    lv_label_set_text(label, ("millis:" + String(count)).c_str()); // Update the label text
-}
 void setup()
 {
     hal_setup(); // Initialize the hardware and peripherals
     // create a text in lvgl
     label = lv_label_create(lv_scr_act()); // Create a label on the active screen
     lv_label_set_text(label, "Hello World!");
-    lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);                     // Align the label to the center of the screen
-    lv_obj_set_style_text_color(label, lv_color_hex(0xFF0000), 0);  // Set text color to red
-    lv_obj_set_style_text_font(label, &lv_font_montserrat_16, 0);   // Set font to Montserrat 16
-    lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_CENTER, 0);    // Center align the text
+    lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);                    // Align the label to the center of the screen
+    lv_obj_set_style_text_color(label, lv_color_hex(0xFF0000), 0); // Set text color to red
+    lv_obj_set_style_text_font(label, &lv_font_montserrat_16, 0);  // Set font to Montserrat 16
+    lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_CENTER, 0);   // Center align the text
 
-
-    ticker.attach(1, ticker_callback); // Call ticker_callback every 1 second
     setShortPressCallback(onShortPress);
     setDoublePressCallback(onDoublePress);
+    xTaskCreatePinnedToCore(
+        otherTask,        // Task function
+        "Other Task",     // Task name
+        2048,             // Stack size (words)
+        NULL,             // Parameters
+        1,                // Priority (1 is usually enough)
+        &otherTaskHandle, // Task handle
+        0                 // Core 0 or 1 (0 is good for simple tasks)
+    );
 }
 
 void loop()
