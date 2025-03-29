@@ -22,6 +22,7 @@ void setBrightness(uint8_t brightness);
 typedef void (*ButtonCallback)();  // Define a callback type
 void setShortPressCallback(ButtonCallback cb);
 void setDoublePressCallback(ButtonCallback cb);
+void toneOut(uint16_t freq, uint16_t duration); // Set the frequency and duration of the tone
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

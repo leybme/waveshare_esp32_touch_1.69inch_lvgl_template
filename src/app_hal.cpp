@@ -352,6 +352,24 @@ bool wasError(const char *errorTopic = "")
 }
 #endif
 
+/**
+ * @brief Generates a tone on a buzzer for a specified pitch and duration.
+ * 
+ * This function produces a square wave signal on the buzzer pin to generate
+ * a tone. The pitch determines the frequency of the tone in Hertz (Hz), and
+ * the duration specifies how long the tone should play in milliseconds (ms).
+ * 
+ * @param pitch The frequency of the tone in Hertz (Hz). Must be greater than 0.
+ * @param duration The duration of the tone in milliseconds (ms). Must be greater than 0.
+ * 
+ * @note This function requires the `BUZZER` macro to be defined and set to a valid
+ *       pin number. If `BUZZER` is not defined or set to -1, the function does nothing.
+ * 
+ * @warning The function assumes that the `digitalWrite` and `delayMicroseconds` functions
+ *          are available and that the `pinMode` function is used to configure the pin.
+ *          Ensure that the `BUZZER` pin is not used for other purposes while this function
+ *          is active.
+ */
 void toneOut(int pitch, int duration)
 { // pitch in Hz, duration in ms
 #if defined(BUZZER) && (BUZZER != -1)

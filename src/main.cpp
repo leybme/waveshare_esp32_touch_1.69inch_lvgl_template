@@ -25,6 +25,8 @@
 
 */
 #include "app_hal.h"
+#include "common/api.h"
+#include "tone.h"
 #include "lvgl.h"
 #include "Ticker.h"
 Ticker ticker;

@@ -9,6 +9,8 @@ I created this template to help get started quickly with the basic setup and fun
 - LVGL support
 - Basic screen brightness control
 - Short and double touch press callbacks
+- Simple tone output support
+- Periodic update via `Ticker`
 
 ## Usage
 
@@ -35,6 +37,52 @@ Set a callback for **double press** events.
 
 ---
 
+### Tone Output
+
+```cpp
+void toneOut(int pitch, int duration);
+```
+Play a tone using defined pitch and duration (in ms).
+
+Example pitch constants (defined in `tone.h`):
+```cpp
+#define TONE_AN 220   // A
+#define TONE_AS 233   // A#
+#define TONE_BN 247   // B
+#define TONE_CN 261   // C
+#define TONE_CS 277   // C#
+#define TONE_DN 294   // D
+#define TONE_DS 311   // D#
+#define TONE_EN 330   // E
+#define TONE_FN 349   // F
+#define TONE_FS 370   // F#
+#define TONE_GN 392   // G
+#define TONE_GS 415   // G#
+```
+
+---
+
+### Periodic Ticker Callback
+
+Use `Ticker` to schedule functions at a regular interval:
+
+```cpp
+Ticker ticker;
+
+void ticker_callback()
+{
+    static long count = millis();
+    count = millis();
+    Serial1.println("Ticker called! " + String(count));
+    lv_label_set_text(label, ("millis:" + String(count)).c_str()); // Update the label text
+}
+
+// Call ticker_callback every 1 second
+ticker.attach(1, ticker_callback);
+```
+
+---
+
 ## Hardware
 
 - **Display:** Waveshare 1.69" Touch LCD
@@ -55,7 +103,7 @@ MIT License – free to use and modify.
 
 ---
 
-## Support this work
+## Support This Project
 
 If you find this project helpful, you can [buy me a coffee](https://www.paypal.com/paypalme/ley995) ☕
 
