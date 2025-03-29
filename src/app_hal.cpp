@@ -478,7 +478,7 @@ lv_fs_res_t sd_close_cb(lv_fs_drv_t *drv, void *file_p)
  * 
  * @param value The brightness level to set, ranging from 0 (off) to 255 (maximum brightness).
  */
-void screenBrightness(uint8_t value)
+void setBrightness(uint8_t value)
 {
   tft.setBrightness(value);
 #ifdef ELECROW_C3
@@ -556,17 +556,6 @@ int getPrefInt(const char *key, int def_value)
   return prefs.getInt(key, def_value);
 }
 
-
-
-void onBrightnessChange(lv_event_t *e)
-{
-  // Your code here
-  lv_obj_t *slider = (lv_obj_t *)lv_event_get_target(e);
-  int v = lv_slider_get_value(slider);
-  screenBrightness(v);
-
-  prefs.putInt("brightness", v);
-}
 
 
 void setTimeout(int i)
