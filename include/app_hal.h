@@ -19,8 +19,9 @@ extern "C" {
 void hal_setup(void);
 void hal_loop(void);
 void setBrightness(uint8_t brightness);
-
-
+typedef void (*ButtonCallback)();  // Define a callback type
+void setShortPressCallback(ButtonCallback cb);
+void setDoublePressCallback(ButtonCallback cb);
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

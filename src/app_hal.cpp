@@ -173,9 +173,23 @@ static const uint32_t screenHeight = HEIGHT;
 const unsigned int lvBufferSize = screenWidth * buf_size;
 uint8_t lvBuffer[2][lvBufferSize];
 
+#define LONG_PRESS_DURATION 2000  // milliseconds
+#define DOUBLE_PRESS_GAP    300   // milliseconds
+unsigned long buttonPressTime = 0;
+unsigned long lastPressTime = 0;
+bool buttonPressed = false;
+bool longPressHandled = false;
 
-
-
+// Callback function pointers
+ButtonCallback shortPressCallback = nullptr;
+ButtonCallback doublePressCallback = nullptr;
+// Public setters
+void setShortPressCallback(ButtonCallback cb) {
+  shortPressCallback = cb;
+}
+void setDoublePressCallback(ButtonCallback cb) {
+  doublePressCallback = cb;
+}
 void hal_setup(void);
 void hal_loop(void);
 
@@ -654,8 +668,12 @@ static uint32_t my_tick(void)
   return millis();
 }
 
+
 void hal_setup()
 {
+  pinMode(SYS_EN_GPIO, OUTPUT);
+  digitalWrite(SYS_EN_GPIO, HIGH); // SYS_EN high to maintain power
+  pinMode(PWR_BUTTON_GPIO, INPUT); // PWR button uses SYS_OUT line
 
   Serial.begin(115200); /* prepare for possible serial debug */
   Serial1.begin(115200);
@@ -757,11 +775,84 @@ void hal_setup()
 
 }
 
+/**
+ * @brief Handles button press events, including short press, long press, and double press.
+ * 
+ * This function monitors the state of a button and performs actions based on the type of press:
+ * - Short press: Executes custom short-press behavior.
+ * - Double press: Executes custom double-press behavior if two presses occur within a defined gap.
+ * - Long press: Powers off the system if the button is held for a specified duration.
+ * 
+ * The function also handles continuous long press events to ensure the system powers off 
+ * after the long press duration is exceeded.
+ * 
+ * @note This function relies on the following global variables:
+ * - `buttonPressed`: Tracks whether the button is currently pressed.
+ * - `buttonPressTime`: Stores the timestamp of when the button was pressed.
+ * - `lastPressTime`: Stores the timestamp of the last button release.
+ * - `longPressHandled`: Tracks whether the long press action has already been handled.
+ * 
+ * @note This function uses the following constants:
+ * - `PWR_BUTTON_GPIO`: GPIO pin connected to the button.
+ * - `SYS_EN_GPIO`: GPIO pin controlling system power.
+ * - `LONG_PRESS_DURATION`: Duration (in milliseconds) to detect a long press.
+ * - `DOUBLE_PRESS_GAP`: Maximum time gap (in milliseconds) between two presses to detect a double press.
+ * - `TONE_FS` and `TONE_GN`: Frequencies used for tone output.
+ * 
+ * @note The function calls the following helper functions:
+ * - `digitalRead(pin)`: Reads the state of the specified GPIO pin.
+ * - `digitalWrite(pin, value)`: Sets the state of the specified GPIO pin.
+ * - `millis()`: Returns the number of milliseconds since the program started.
+ * - `toneOut(frequency, duration)`: Outputs a tone of the specified frequency and duration.
+ * - `ESP.restart()`: Restarts the ESP32 microcontroller.
+ */
+void handleButtonPress() {
+  bool isPressed = digitalRead(PWR_BUTTON_GPIO) == LOW;
+
+  if (isPressed && !buttonPressed) {
+    buttonPressed = true;
+    buttonPressTime = millis();
+  }
+
+  if (!isPressed && buttonPressed) {
+    unsigned long pressDuration = millis() - buttonPressTime;
+
+    if (pressDuration >= LONG_PRESS_DURATION) {
+      // Long press
+      toneOut(TONE_FS * 2, 500);
+      digitalWrite(SYS_EN_GPIO, LOW);
+      digitalWrite(SYS_EN_GPIO, LOW); // Power off the system
+      
+    } else if (millis() - lastPressTime < DOUBLE_PRESS_GAP) {
+      // Double press
+      toneOut(TONE_FS * 2, 170);
+      toneOut(TONE_GN * 2, 170);
+      if (doublePressCallback) doublePressCallback();
+    } else {
+      toneOut(TONE_FS * 2, 170);
+      if (shortPressCallback) shortPressCallback();
+    }
+
+    lastPressTime = millis();
+    buttonPressed = false;
+    longPressHandled = false;
+  }
+
+  // Continuous long press
+  if (buttonPressed && !longPressHandled) {
+    if (millis() - buttonPressTime >= LONG_PRESS_DURATION) {
+      longPressHandled = true;
+      toneOut(TONE_FS * 2, 500);
+      digitalWrite(SYS_EN_GPIO, LOW); // Power off the system
+      ESP.restart();
+    }
+  }
+}
 void hal_loop()
 {
   lv_timer_handler(); // Update the UI
   delay(5);
-
+  handleButtonPress(); 
 }
 
 

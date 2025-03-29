@@ -151,11 +151,29 @@
 #define RST 8
 
 #define BL 15
+#define BUZZER_GPIO     42
+#define BUZZER BUZZER_GPIO
 
-#define BUZZER -1 //33
+#define RTC_INT_GPIO    39
+#define SYS_EN_GPIO     41
+#define SYS_OUT_GPIO    40
+#define PWR_BUTTON_GPIO SYS_OUT_GPIO
 
 #define MAX_FILE_OPEN 20
-
+/* 
+| Peripheral                  | Old version | New version |
+|----------------------------|-------------|-------------|
+| Buzzer (Buzz)              | GPIO33      | GPIO42      |
+| RTC interrupt (RTC_INT)    | GPIO41      | GPIO39      |
+| Power control (SYS_EN)     | GPIO35      | GPIO41      |
+| Power control (SYS_OUT)    | GPIO36      | GPIO40      |
+Principle analysis:
+- This function button is designed to solve the problem of few peripheral buttons, and its principle is as follows:
+- Pressing PWR allows battery power, initiating the system. At this point, the system should define SYS_EN to continuously output a high voltage level to maintain the powered-on effect.
+- Releasing PWR will not cause a power cut. The function of PWR at this time is to lower SYS_OUT.
+- The system detects actions such as pressing, double pressing, and long pressing on SYS_OUT, enabling customizable power-off control operations.
+- For instance, in a long press mode, setting SYS_EN to a low level to disconnect the battery power completes the use of the multi-purpose buttons.
+*/
 
 
 #else
